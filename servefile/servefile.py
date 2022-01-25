@@ -575,12 +575,39 @@ class FilePutter(BaseHTTPServer.BaseHTTPRequestHandler):
     uploadPage = """
 <!docype html>
 <html>
-    <form action="/" method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data">
         <label for="file">Filename:</label>
-        <input type="file" name="file" id="file" />
+        <input type="file" name="file" id="file"/><br>
+        <progress id="progress" value="0" max="100"></progress>
+        <p id="loaded"></p>
         <br />
-        <input type="submit" name="submit" value="Upload" />
+        <input type="button" name="submit" value="Upload" onclick="uploadFile()" />
     </form>
+
+    <script>
+        function _(id) {
+            return document.getElementById(id);
+        }
+
+        function uploadFile() {
+            var file = _("file").files[0];
+            var formdata = new FormData();
+            formdata.append("file", file);
+            var ajax = new XMLHttpRequest();
+            ajax.upload.addEventListener("progress", handler, false);
+            ajax.open("POST", "/");
+            ajax.send(formdata);
+        }
+
+        function handler(event) {
+            var percent = (event.loaded / event.total) * 100;
+            _("loaded").innerHTML = "Uploaded " + humanFileSize(event.loaded, true) + " of " + humanFileSize(event.total, true) + ": " + Math.round(percent) + "%";
+            _("progress").value = Math.round(percent);
+            _("progress").innerHTML = Math.round(percent) + "%";
+        }
+
+        function humanFileSize(B,i){var e=i?1e3:1024;if(Math.abs(B)<e)return B+" B";var a=i?["kB","MB","GB","TB","PB","EB","ZB","YB"]:["KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"],t=-1;do B/=e,++t;while(Math.abs(B)>=e&&t<a.length-1);return B.toFixed(1)+" "+a[t]}
+    </script>
 </html>
 """
 
